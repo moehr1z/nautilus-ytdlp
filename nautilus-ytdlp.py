@@ -1,12 +1,17 @@
 from gi.repository import Nautilus, GObject, Gtk, GLib
+import subprocess
 
 
 class EntryWindow(Gtk.Window):
     """Class for the url prompt entry"""
 
     def __init__(self):
+        self.url = ""   # the url entered, initially empty
+
+
         super().__init__(title="Video downloader")
-        self.set_size_request(200, 100)
+        self.set_size_request(400, 100)
+        # TODO attach to main window
 
         self.timeout_id = None
 
@@ -21,8 +26,9 @@ class EntryWindow(Gtk.Window):
         vbox.pack_start(hbox, True, True, 0)
 
         self.entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY, "system-search-symbolic")
-        
-
+         
+        self.button_download = Gtk.Button(label="Download")
+        hbox.pack_start(self.button_download, True, True, 0)
         
 
 class YTDLPExtension(GObject.GObject, Nautilus.MenuProvider, Nautilus.LocationWidgetProvider):
@@ -38,7 +44,13 @@ class YTDLPExtension(GObject.GObject, Nautilus.MenuProvider, Nautilus.LocationWi
         url_prompt = EntryWindow()
         url_prompt.connect("destroy", Gtk.main_quit)
         url_prompt.show_all()
+        url_prompt.button_download.connect("pressed", self.on_download_pressed, url_prompt)
         
+    def on_download_pressed(self, button, prompt):
+        self.video_url = prompt.entry.get_buffer().get_text()
+        # TODO make this a new thread, otherwise it blocks 
+        subprocess.call(["yt-dlp", self.video_url])
+
 
     def get_background_items(self, window, file):
         url_prompt = self.get_widget("", window)
