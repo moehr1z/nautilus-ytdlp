@@ -6,7 +6,7 @@ nautilus-ytdlp provides integration for yt-dlp into the Nautilus file manager an
 any video and playlist supported by yt-dlp as a video or audio file.
 
 # Supported formats:
-* video: MP4 H.264
+* video: MP4
 * audio: MP3, WAV
 
 # Installation and uninstallation
