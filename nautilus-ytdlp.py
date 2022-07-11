@@ -1,5 +1,5 @@
 from gi.repository import Nautilus, GObject, Gtk, GLib
-import subprocess
+import subprocess, threading
 
 
 class EntryWindow(Gtk.Window):
@@ -30,6 +30,13 @@ class EntryWindow(Gtk.Window):
         self.button_download = Gtk.Button(label="Download")
         hbox.pack_start(self.button_download, True, True, 0)
         
+class VideoParams:
+    """Describes parameters for a video"""
+    def __init__(self, type, format, path):
+        self.type = type
+        self.format = format
+        self.path = path
+
 
 class YTDLPExtension(GObject.GObject, Nautilus.MenuProvider, Nautilus.LocationWidgetProvider):
     """A context menu for ytdlp"""
@@ -37,19 +44,47 @@ class YTDLPExtension(GObject.GObject, Nautilus.MenuProvider, Nautilus.LocationWi
     def __init__(self):
         GObject.Object.__init__(self)
         
-        self.video_url = ""
-        
 
-    def show_url_prompt(self, menu, url_prompt):
+    def create_prompt(self, para):
         url_prompt = EntryWindow()
         url_prompt.connect("destroy", Gtk.main_quit)
         url_prompt.show_all()
-        url_prompt.button_download.connect("pressed", self.on_download_pressed, url_prompt)
+        url_prompt.button_download.connect("pressed", self.on_download_pressed, url_prompt, para)
+
+    def on_video_pressed(self, menu, file):
+        # initialize video params
+        path = str(file.get_uri())
+        path = path.split("file://")[1]
+        para = VideoParams("video", "h264", path)        
         
-    def on_download_pressed(self, button, prompt):
-        self.video_url = prompt.entry.get_buffer().get_text()
-        # TODO make this a new thread, otherwise it blocks 
-        subprocess.call(["yt-dlp", self.video_url])
+        self.create_prompt(para)
+
+        
+    def download_video(url, para): 
+        # assemble yt-dlp call string 
+        format_str = ""
+        if para.type == "audio":
+            format_str = "--extract-audio --audio-format " + para.format
+        else:
+            format_str = "--format mp4"
+
+        cmd = "yt-dlp " + "--paths " + para.path + " " + format_str + " " + url
+                 
+        # call yt-dlp with specified args
+        subprocess.run(cmd.split())
+
+
+    def on_download_pressed(self, button, prompt, para):
+        # get entered video url from entry
+        video_url = prompt.entry.get_buffer().get_text()
+        
+        # make url list
+        video_url = video_url.split()
+
+        # download every video in a seperate thread
+        for url in video_url:
+            x = threading.Thread(target=YTDLPExtension.download_video, args=(url, para,))
+            x.start()
 
 
     def get_background_items(self, window, file):
@@ -58,8 +93,8 @@ class YTDLPExtension(GObject.GObject, Nautilus.MenuProvider, Nautilus.LocationWi
         submenu = Nautilus.Menu()
         
         video_h264 = Nautilus.MenuItem(name='YTDLPExtension::video_h264', 
-                                         label='Download video (H.264)')
-        video_h264.connect('activate', self.show_url_prompt, url_prompt)
+                                         label='Download video')
+        video_h264.connect('activate', self.on_video_pressed, file)
         submenu.append_item(video_h264)
 
         submenu.append_item(Nautilus.MenuItem(name='YTDLPExtension::audio_mp3', 
