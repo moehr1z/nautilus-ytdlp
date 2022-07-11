@@ -45,19 +45,19 @@ class YTDLPExtension(GObject.GObject, Nautilus.MenuProvider, Nautilus.LocationWi
         GObject.Object.__init__(self)
         
 
-    def create_prompt(self, para):
+    def create_prompt(self, menu, file, type, format):
+        # initialize video params
+        path = str(file.get_uri())
+        path = path.split("file://")[1]
+        para = VideoParams(type, format, path)        
+
+        # create url entry prompt
         url_prompt = EntryWindow()
         url_prompt.connect("destroy", Gtk.main_quit)
         url_prompt.show_all()
         url_prompt.button_download.connect("pressed", self.on_download_pressed, url_prompt, para)
 
-    def on_video_pressed(self, menu, file):
-        # initialize video params
-        path = str(file.get_uri())
-        path = path.split("file://")[1]
-        para = VideoParams("video", "h264", path)        
         
-        self.create_prompt(para)
 
         
     def download_video(url, para): 
@@ -66,7 +66,7 @@ class YTDLPExtension(GObject.GObject, Nautilus.MenuProvider, Nautilus.LocationWi
         if para.type == "audio":
             format_str = "--extract-audio --audio-format " + para.format
         else:
-            format_str = "--format mp4"
+            format_str = "--format " + para.format
 
         cmd = "yt-dlp " + "--paths " + para.path + " " + format_str + " " + url
                  
@@ -92,22 +92,20 @@ class YTDLPExtension(GObject.GObject, Nautilus.MenuProvider, Nautilus.LocationWi
 
         submenu = Nautilus.Menu()
         
-        video_h264 = Nautilus.MenuItem(name='YTDLPExtension::video_h264', 
-                                         label='Download video')
-        video_h264.connect('activate', self.on_video_pressed, file)
-        submenu.append_item(video_h264)
+        video_mp4 = Nautilus.MenuItem(name='YTDLPExtension::video_mp4', 
+                                         label='Download video (MP4)')
+        video_mp4.connect('activate', self.create_prompt, file, "video", "mp4")
+        submenu.append_item(video_mp4)
 
-        submenu.append_item(Nautilus.MenuItem(name='YTDLPExtension::audio_mp3', 
-                                         label='Download audio (MP3)'))
+        audio_mp3 = Nautilus.MenuItem(name='YTDLPExtension::audio_mp3', 
+                                         label='Download audio (MP3)')
+        audio_mp3.connect('activate', self.create_prompt, file, "audio", "mp3")
+        submenu.append_item(audio_mp3)
 
-        submenu.append_item(Nautilus.MenuItem(name='YTDLPExtension::audio_wav', 
-                                         label='Download audio (WAV)'))
-
-        submenu.append_item(Nautilus.MenuItem(name='YTDLPExtension::playlist_h264', 
-                                         label='Download video playlist (H.264)'))
-
-        submenu.append_item(Nautilus.MenuItem(name='YTDLPExtension::playlist_mp3', 
-                                         label='Download audio playlist (MP3)'))
+        audio_wav = Nautilus.MenuItem(name='YTDLPExtension::audio_wav', 
+                                         label='Download audio (WAV)')
+        audio_wav.connect('activate', self.create_prompt, file, "audio", "wav")
+        submenu.append_item(audio_wav)
 
         menuitem = Nautilus.MenuItem(name='YTDLPExtension::Top', 
                                          label='YouTube downloader')
