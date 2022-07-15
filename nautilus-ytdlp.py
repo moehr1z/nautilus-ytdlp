@@ -1,5 +1,10 @@
-from gi.repository import Nautilus, GObject, Gtk, GLib
-import subprocess, threading
+from gi.repository import Nautilus, GObject, Gtk, GLib, Notify
+import subprocess 
+import threading
+import urllib.request
+import json
+import urllib
+import pprint
 
 
 class EntryWindow(Gtk.Window):
@@ -70,9 +75,24 @@ class YTDLPExtension(GObject.GObject, Nautilus.MenuProvider, Nautilus.LocationWi
 
         cmd = "yt-dlp " + "--paths " + para.path + " " + format_str + " " + url
                  
+
         # call yt-dlp with specified args
         subprocess.run(cmd.split())
+        
+    def get_video_title(self, url):
+        """returns the name of the video corresponding the url"""
+        params = {"format": "json", "url": url}
+        url = "https://www.youtube.com/oembed"
+        query_string = urllib.parse.urlencode(params)
+        url = url + "?" + query_string
 
+        with urllib.request.urlopen(url) as response:
+            response_text = response.read()
+            data = json.loads(response_text.decode())
+            return data['title']
+
+    def cancel_download(self, thread):
+        return 0
 
     def on_download_pressed(self, button, prompt, para):
         # get entered video url from entry
@@ -85,6 +105,24 @@ class YTDLPExtension(GObject.GObject, Nautilus.MenuProvider, Nautilus.LocationWi
         for url in video_url:
             x = threading.Thread(target=YTDLPExtension.download_video, args=(url, para,))
             x.start()
+            
+            # notify user about started download
+            Notify.init("YouTube Downloader")
+            video_title = self.get_video_title(url)
+            notification = Notify.Notification.new(
+                "Downloading video",
+                video_title,
+                "emblem-downloads", #TODO replace with proper download icon
+            )
+            notification.add_action(
+                "action_click",
+                "Cancel",
+                self.cancel_download,
+                x 
+            ) 
+            
+            notification.show()
+            
 
 
     def get_background_items(self, window, file):
