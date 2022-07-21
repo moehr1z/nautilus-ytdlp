@@ -1,10 +1,11 @@
 from gi.repository import Nautilus, GObject, Gtk, GLib, Notify
 import subprocess 
-import threading
+from multiprocessing import Process
 import urllib.request
 import json
 import urllib
 import pprint
+import yt_dlp
 
 
 class EntryWindow(Gtk.Window):
@@ -66,30 +67,34 @@ class YTDLPExtension(GObject.GObject, Nautilus.MenuProvider, Nautilus.LocationWi
 
         
     def download_video(url, para): 
-        # assemble yt-dlp call string 
-        format_str = ""
-        if para.type == "audio":
-            format_str = "--extract-audio --audio-format " + para.format
-        else:
-            format_str = "--format " + para.format
+        options = {}
+        # TODO use proper formats
+        # if para.type == "audio":
+        #     options = {
+        #         'format': para.format,
+        #     }
+        # else:   
+        #     options = {
+        #         'format': para.format,
+        #         'postprocessors': [{  # Extract audio using ffmpeg
+        #             'key': 'FFmpegExtractAudio',
+        #             'preferredcodec': para.format,
+        #         }]
+        #     }
 
-        cmd = "yt-dlp " + "--paths " + para.path + " " + format_str + " " + url
-                 
-
-        # call yt-dlp with specified args
-        subprocess.run(cmd.split())
+        with yt_dlp.YoutubeDL(options) as ydl:
+            ydl.download([url])
         
+        return 0
+
     def get_video_title(self, url):
         """returns the name of the video corresponding the url"""
-        params = {"format": "json", "url": url}
-        url = "https://www.youtube.com/oembed"
-        query_string = urllib.parse.urlencode(params)
-        url = url + "?" + query_string
 
-        with urllib.request.urlopen(url) as response:
-            response_text = response.read()
-            data = json.loads(response_text.decode())
-            return data['title']
+        ydl_opts = {}
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+        return info['title']
+
 
     def cancel_download(self, thread):
         return 0
@@ -103,7 +108,8 @@ class YTDLPExtension(GObject.GObject, Nautilus.MenuProvider, Nautilus.LocationWi
 
         # download every video in a seperate thread
         for url in video_url:
-            x = threading.Thread(target=YTDLPExtension.download_video, args=(url, para,))
+            # TODO the process doesnt terminate
+            x = Process(target=YTDLPExtension.download_video, args=(url, para,))
             x.start()
             
             # notify user about started download
