@@ -1,3 +1,8 @@
+import gi
+gi.require_version('Notify', '0.7')
+gi.require_version('GObject', '2.0')
+gi.require_version('GLib', '2.0')
+gi.require_version('Nautilus', '3.0')
 from gi.repository import Nautilus, GObject, Gtk, GLib, Notify
 import subprocess 
 from multiprocessing import Process
@@ -6,7 +11,7 @@ import json
 import urllib
 import pprint
 import yt_dlp
-
+import dbus
 
 class EntryWindow(Gtk.Window):
     """Class for the url prompt entry"""
@@ -43,13 +48,58 @@ class VideoParams:
         self.format = format
         self.path = path
 
+class VideoDownloader(GObject.GObject):
+
+    def cancel_download():
+        return 0
+
+    def download(self, url: str, para: VideoParams):
+        """downloads the video corresponding to the url and sends a notification"""
+
+        # download video
+        options = {}
+
+        # TODO use proper formats
+        if para.type == "audio":
+            options = {
+                'format': 'm4a/bestaudio/best',
+                # ℹ️ See help(yt_dlp.postprocessor) for a list of available Postprocessors and their arguments
+                'postprocessors': [{  # Extract audio using ffmpeg
+                    'key': 'FFmpegExtractAudio',
+                    'preferredcodec': 'm4a',
+                }],
+                'outtmpl': "%(title)s .%(ext)s",
+            }
+        else: 
+            options = {
+                'format_sort': ['ext'],
+                'outtmpl': "%(title)s .%(ext)s",
+            }
+
+        with yt_dlp.YoutubeDL(options) as ydl:
+            video_info = ydl.extract_info(url, download=False)
+
+        obj = dbus.SessionBus().get_object("org.freedesktop.Notifications", "/org/freedesktop/Notifications")
+        obj = dbus.Interface(obj, "org.freedesktop.Notifications")
+        obj.Notify( "Youtube downloader",       # app name
+                    0,                          # replaces id
+                    "",         # TODO icon     # app icon
+                    "Downloading video",        # summary
+                    video_info['title'],        # body
+                    ['1', 'Cancel'],         #  TODO org.freedesktop.Notifications.ActionInvoked # actions
+                    {"urgency": 1},             # hints
+                    10000)                      # expire timeout
+
+
+        # TODO exit process
+
+
 
 class YTDLPExtension(GObject.GObject, Nautilus.MenuProvider, Nautilus.LocationWidgetProvider):
     """A context menu for ytdlp"""
 
     def __init__(self):
         GObject.Object.__init__(self)
-        
 
     def create_prompt(self, menu, file, type, format):
         # initialize video params
@@ -63,41 +113,6 @@ class YTDLPExtension(GObject.GObject, Nautilus.MenuProvider, Nautilus.LocationWi
         url_prompt.show_all()
         url_prompt.button_download.connect("pressed", self.on_download_pressed, url_prompt, para)
 
-        
-
-        
-    def download_video(url, para): 
-        options = {}
-        # TODO use proper formats
-        # if para.type == "audio":
-        #     options = {
-        #         'format': para.format,
-        #     }
-        # else:   
-        #     options = {
-        #         'format': para.format,
-        #         'postprocessors': [{  # Extract audio using ffmpeg
-        #             'key': 'FFmpegExtractAudio',
-        #             'preferredcodec': para.format,
-        #         }]
-        #     }
-
-        with yt_dlp.YoutubeDL(options) as ydl:
-            ydl.download([url])
-        
-        return 0
-
-    def get_video_title(self, url):
-        """returns the name of the video corresponding the url"""
-
-        ydl_opts = {}
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-        return info['title']
-
-
-    def cancel_download(self, thread):
-        return 0
 
     def on_download_pressed(self, button, prompt, para):
         # get entered video url from entry
@@ -109,26 +124,9 @@ class YTDLPExtension(GObject.GObject, Nautilus.MenuProvider, Nautilus.LocationWi
         # download every video in a seperate thread
         for url in video_url:
             # TODO the process doesnt terminate
-            x = Process(target=YTDLPExtension.download_video, args=(url, para,))
+            downloader = VideoDownloader()
+            x = Process(target=downloader.download, args=(url, para,))
             x.start()
-            
-            # notify user about started download
-            Notify.init("YouTube Downloader")
-            video_title = self.get_video_title(url)
-            notification = Notify.Notification.new(
-                "Downloading video",
-                video_title,
-                "emblem-downloads", #TODO replace with proper download icon
-            )
-            notification.add_action(
-                "action_click",
-                "Cancel",
-                self.cancel_download,
-                x 
-            ) 
-            
-            notification.show()
-            
 
 
     def get_background_items(self, window, file):
@@ -156,3 +154,4 @@ class YTDLPExtension(GObject.GObject, Nautilus.MenuProvider, Nautilus.LocationWi
         menuitem.set_submenu(submenu)
 
         return menuitem,
+
