@@ -13,6 +13,9 @@ import pprint
 import yt_dlp
 import dbus
 
+from dbus.mainloop.glib import DBusGMainLoop
+DBusGMainLoop(set_as_default=True)
+
 class EntryWindow(Gtk.Window):
     """Class for the url prompt entry"""
 
@@ -49,14 +52,16 @@ class VideoParams:
         self.path = path
 
 class VideoDownloader(GObject.GObject):
+    def __init__(self):
+        self.signal_id = "id42"     # TODO unique id
 
-    def cancel_download():
-        return 0
+    def cancel_download(id, action_key):
+        print("dis canceled")
+
 
     def download(self, url: str, para: VideoParams):
         """downloads the video corresponding to the url and sends a notification"""
 
-        # download video
         options = {}
 
         # TODO use proper formats
@@ -76,12 +81,13 @@ class VideoDownloader(GObject.GObject):
                 'outtmpl': "%(title)s .%(ext)s",
             }
 
+        # extract title and send notification
         with yt_dlp.YoutubeDL(options) as ydl:
             video_info = ydl.extract_info(url, download=False)
 
-        obj = dbus.SessionBus().get_object("org.freedesktop.Notifications", "/org/freedesktop/Notifications")
-        obj = dbus.Interface(obj, "org.freedesktop.Notifications")
-        obj.Notify( "Youtube downloader",       # app name
+        bus = dbus.SessionBus().get_object("org.freedesktop.Notifications", "/org/freedesktop/Notifications")
+        bus = dbus.Interface(bus, "org.freedesktop.Notifications")
+        bus.Notify( "Youtube downloader",       # app name
                     0,                          # replaces id
                     "",         # TODO icon     # app icon
                     "Downloading video",        # summary
@@ -89,6 +95,18 @@ class VideoDownloader(GObject.GObject):
                     ['1', 'Cancel'],         #  TODO org.freedesktop.Notifications.ActionInvoked # actions
                     {"urgency": 1},             # hints
                     10000)                      # expire timeout
+
+        bus = dbus.SessionBus().add_signal_receiver(
+                    handler_function=self.cancel_download, 
+                    signal_name=self.signal_id,
+                    dbus_interface="org.freedesktop.Notifications.ActionInvoked", 
+                    bus_name=None,
+                    path=None,
+                    )
+
+        # download the video
+        with yt_dlp.YoutubeDL(options) as ydl:
+            ydl.download(url)
 
 
         # TODO exit process
