@@ -43,6 +43,21 @@ class EntryWindow(Gtk.Window):
          
         self.button_download = Gtk.Button(label="Download")
         hbox.pack_start(self.button_download, True, True, 0)
+
+
+    def on_download_pressed(self, button, para):
+        # get entered video url from entry
+        video_url = self.entry.get_buffer().get_text()
+        
+        # make url list
+        video_url = video_url.split()
+
+        # download every video in a seperate thread
+        for url in video_url:
+            # TODO the process doesnt terminate
+            downloader = VideoDownloader()
+            x = Process(target=downloader.download, args=(url, para,))
+            x.start()
         
 class VideoParams:
     """Describes parameters for a video"""
@@ -129,22 +144,22 @@ class YTDLPExtension(GObject.GObject, Nautilus.MenuProvider, Nautilus.LocationWi
         url_prompt = EntryWindow()
         url_prompt.connect("destroy", Gtk.main_quit)
         url_prompt.show_all()
-        url_prompt.button_download.connect("pressed", self.on_download_pressed, url_prompt, para)
+        url_prompt.button_download.connect("pressed", url_prompt.on_download_pressed, para)
 
 
-    def on_download_pressed(self, button, prompt, para):
-        # get entered video url from entry
-        video_url = prompt.entry.get_buffer().get_text()
+    # def on_download_pressed(self, button, prompt, para):
+    #     # get entered video url from entry
+    #     video_url = prompt.entry.get_buffer().get_text()
         
-        # make url list
-        video_url = video_url.split()
+    #     # make url list
+    #     video_url = video_url.split()
 
-        # download every video in a seperate thread
-        for url in video_url:
-            # TODO the process doesnt terminate
-            downloader = VideoDownloader()
-            x = Process(target=downloader.download, args=(url, para,))
-            x.start()
+    #     # download every video in a seperate thread
+    #     for url in video_url:
+    #         # TODO the process doesnt terminate
+    #         downloader = VideoDownloader()
+    #         x = Process(target=downloader.download, args=(url, para,))
+    #         x.start()
 
 
     def get_background_items(self, window, file):
