@@ -140,26 +140,12 @@ class YTDLPExtension(GObject.GObject, Nautilus.MenuProvider, Nautilus.LocationWi
         path = path.split("file://")[1]
         para = VideoParams(type, format, path)        
 
+
         # create url entry prompt
         url_prompt = EntryWindow()
         url_prompt.connect("destroy", Gtk.main_quit)
         url_prompt.show_all()
         url_prompt.button_download.connect("pressed", url_prompt.on_download_pressed, para)
-
-
-    # def on_download_pressed(self, button, prompt, para):
-    #     # get entered video url from entry
-    #     video_url = prompt.entry.get_buffer().get_text()
-        
-    #     # make url list
-    #     video_url = video_url.split()
-
-    #     # download every video in a seperate thread
-    #     for url in video_url:
-    #         # TODO the process doesnt terminate
-    #         downloader = VideoDownloader()
-    #         x = Process(target=downloader.download, args=(url, para,))
-    #         x.start()
 
 
     def get_background_items(self, window, file):
