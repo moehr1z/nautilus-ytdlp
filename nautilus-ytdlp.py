@@ -71,13 +71,7 @@ class VideoParams:
 
 class VideoDownloader(GObject.GObject):
     def __init__(self):
-        self.signal_id = "id42"     # TODO unique id
-        self.signal_cancel_id = self.signal_id+"_cancel"
-
-    # def cancel_download(id, action_key):
-    # def cancel_download(self, id, action_key, _=None):
-    #     if action_key == self.signal_cancel_id:
-    #         print("yaaaaaaaaaay")
+        self.id = "id42"     # TODO unique id
 
 
     def download(self, url: str, para: VideoParams):
@@ -109,32 +103,19 @@ class VideoDownloader(GObject.GObject):
         bus = dbus.SessionBus().get_object("org.freedesktop.Notifications", "/org/freedesktop/Notifications")
         bus = dbus.Interface(bus, "org.freedesktop.Notifications")
         bus.Notify( "Youtube downloader",       # app name
-                    0,                          # replaces id
+                    self.id,                    # replaces id
                     "",         # TODO icon     # app icon
                     "Downloading video",        # summary
                     video_info['title'],        # body
-                    # [self.signal_cancel_id, 'Cancel'],         #  TODO org.freedesktop.Notifications.ActionInvoked # actions
                     [],
                     {"urgency": 1},             # hints
                     10000)                      # expire timeout
 
-        # TODO add cancel action
-        # bus = dbus.SessionBus().add_signal_receiver(
-        #             handler_function=self.cancel_download, 
-        #             # signal_name=self.signal_id,
-        #             # signal_name="cancel_downi",
-        #             dbus_interface="org.freedesktop.Notifications", 
-        #             # member_keyword="ActionInvoked",
-        #             # dbus_interface=None, 
-        #             # bus_name=None,
-        #             path="/org/freedesktop/Notifications", 
-        #             )
 
         # download the video
         with yt_dlp.YoutubeDL(options) as ydl:
             ydl.download(url)
         
-        # GLib.MainLoop().run()
 
 
 
