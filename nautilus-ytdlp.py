@@ -5,7 +5,7 @@ gi.require_version('GLib', '2.0')
 gi.require_version('Nautilus', '3.0')
 from gi.repository import Nautilus, GObject, Gtk, GLib, Notify
 import subprocess 
-from multiprocessing import Process
+from multiprocessing import Process, connection
 import urllib.request
 import json
 import urllib
@@ -47,17 +47,19 @@ class EntryWindow(Gtk.Window):
 
     def on_download_pressed(self, button, para):
         # get entered video url from entry
-        video_url = self.entry.get_buffer().get_text()
+        video_urls = self.entry.get_buffer().get_text()
         
         # make url list
-        video_url = video_url.split()
+        video_urls = video_urls.split()
 
         # download every video in a seperate thread
-        for url in video_url:
-            # TODO the process doesnt terminate
-            downloader = VideoDownloader()
-            x = Process(target=downloader.download, args=(url, para,))
-            x.start()
+        downloaders = [(VideoDownloader(), url) for url in video_urls]
+        pool = [Process(target=downloader.download, args=(url, para)) for (downloader, url) in downloaders]
+        for p in pool:
+            p.start() 
+
+        connection.wait(p.sentinel for p in pool)
+
         
 class VideoParams:
     """Describes parameters for a video"""
@@ -66,12 +68,16 @@ class VideoParams:
         self.format = format
         self.path = path
 
+
 class VideoDownloader(GObject.GObject):
     def __init__(self):
         self.signal_id = "id42"     # TODO unique id
+        self.signal_cancel_id = self.signal_id+"_cancel"
 
-    def cancel_download(id, action_key):
-        print("dis canceled")
+    # def cancel_download(id, action_key):
+    # def cancel_download(self, id, action_key, _=None):
+    #     if action_key == self.signal_cancel_id:
+    #         print("yaaaaaaaaaay")
 
 
     def download(self, url: str, para: VideoParams):
@@ -107,24 +113,29 @@ class VideoDownloader(GObject.GObject):
                     "",         # TODO icon     # app icon
                     "Downloading video",        # summary
                     video_info['title'],        # body
-                    ['1', 'Cancel'],         #  TODO org.freedesktop.Notifications.ActionInvoked # actions
+                    # [self.signal_cancel_id, 'Cancel'],         #  TODO org.freedesktop.Notifications.ActionInvoked # actions
+                    [],
                     {"urgency": 1},             # hints
                     10000)                      # expire timeout
 
-        bus = dbus.SessionBus().add_signal_receiver(
-                    handler_function=self.cancel_download, 
-                    signal_name=self.signal_id,
-                    dbus_interface="org.freedesktop.Notifications.ActionInvoked", 
-                    bus_name=None,
-                    path=None,
-                    )
+        # TODO add cancel action
+        # bus = dbus.SessionBus().add_signal_receiver(
+        #             handler_function=self.cancel_download, 
+        #             # signal_name=self.signal_id,
+        #             # signal_name="cancel_downi",
+        #             dbus_interface="org.freedesktop.Notifications", 
+        #             # member_keyword="ActionInvoked",
+        #             # dbus_interface=None, 
+        #             # bus_name=None,
+        #             path="/org/freedesktop/Notifications", 
+        #             )
 
         # download the video
         with yt_dlp.YoutubeDL(options) as ydl:
             ydl.download(url)
+        
+        # GLib.MainLoop().run()
 
-
-        # TODO exit process
 
 
 
