@@ -12,6 +12,8 @@ import urllib
 import pprint
 import yt_dlp
 import dbus
+import os
+import time
 
 from dbus.mainloop.glib import DBusGMainLoop
 DBusGMainLoop(set_as_default=True)
@@ -69,10 +71,25 @@ class VideoParams:
         self.path = path
 
 
-class VideoDownloader(GObject.GObject):
+class VideoDownloader():
     def __init__(self):
-        self.id = "id42"     # TODO unique id
+        self.id = str(os.getpid())     # TODO unique id
+        self.bus = dbus.SessionBus().get_object("org.freedesktop.Notifications", "/org/freedesktop/Notifications")
+        self.bus = dbus.Interface(self.bus, "org.freedesktop.Notifications")
+        self.video_info = []
 
+
+    def notify(self, d):
+        if d['status'] == 'finished':
+            self.bus.Notify("Youtube downloader",       # app name
+                            self.id,                    # replaces id
+                            "/usr/share/icons/Adwaita/32x32/emblems/emblem-ok-symbolic.symbolic.png",         # TODO icon     # app icon
+                            "Finished download",        # summary
+                            self.video_info['title'],   # body
+                            [],
+                            {},                         # hints
+                            1000000)                    # expire timeout
+        
 
     def download(self, url: str, para: VideoParams):
         """downloads the video corresponding to the url and sends a notification"""
@@ -92,24 +109,24 @@ class VideoDownloader(GObject.GObject):
             }
         else: 
             options = {
+                'progress_hooks': [self.notify],
                 'format_sort': ['ext'],
                 'outtmpl': "%(title)s .%(ext)s",
             }
 
         # extract title and send notification
         with yt_dlp.YoutubeDL(options) as ydl:
-            video_info = ydl.extract_info(url, download=False)
+            self.video_info = ydl.extract_info(url, download=False)
 
-        bus = dbus.SessionBus().get_object("org.freedesktop.Notifications", "/org/freedesktop/Notifications")
-        bus = dbus.Interface(bus, "org.freedesktop.Notifications")
-        bus.Notify( "Youtube downloader",       # app name
-                    self.id,                    # replaces id
-                    "",         # TODO icon     # app icon
-                    "Downloading video",        # summary
-                    video_info['title'],        # body
-                    [],
-                    {"urgency": 1},             # hints
-                    10000)                      # expire timeout
+        self.id = self.bus.Notify("Youtube downloader",       # app name
+                        self.id,                    # replaces id
+                        "/usr/share/icons/Adwaita/32x32/places/folder-download-symbolic.symbolic.png",         # TODO icon     # app icon
+                        "Downloading video",        # summary
+                        self.video_info['title'],   # body
+                        [],
+                        {},                         # hints
+                        1000000)                          # expire timeout
+
 
 
         # download the video
