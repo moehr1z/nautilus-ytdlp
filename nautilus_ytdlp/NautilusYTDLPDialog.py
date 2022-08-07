@@ -30,18 +30,19 @@ class MainWindow(Gtk.ApplicationWindow):
         self.url_box.set_margin_start(10)
         self.url_box.set_margin_end(10)
         
+        # initialize download button
+        self.download_button = Gtk.Button()
+        self.download_button.set_icon_name("folder-download-symbolic")
+        self.download_button.connect('clicked', self.on_download_pressed)
+        self.download_button.set_halign(Gtk.Align.END)
+        self.set_default_widget(self.download_button)
 
         #  initialize url entry
         self.url_entry = Gtk.Entry()
         self.url_entry.set_placeholder_text("Enter video url")
         self.url_entry.set_hexpand(True)
         self.url_entry.set_halign(Gtk.Align.FILL)
-
-        # initialize download button
-        self.download_button = Gtk.Button()
-        self.download_button.set_icon_name("folder-download-symbolic")
-        self.download_button.connect('clicked', self.on_download_pressed)
-        self.download_button.set_halign(Gtk.Align.END)
+        self.url_entry.set_activates_default(True)
 
         self.set_child(self.main_box)
         self.main_box.append(self.url_box) 
