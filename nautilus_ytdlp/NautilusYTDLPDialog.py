@@ -16,6 +16,7 @@ class MainWindow(Gtk.ApplicationWindow):
         GLib.set_application_name("Youtube Downloader")
         self.set_default_size(400, 110)
         self.set_title("Video Downloader")
+        self.set_resizable(False)
 
         self.main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 
@@ -24,7 +25,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
         # configure url_box
         self.url_box.set_spacing(10)
-        self.url_box.set_margin_top(10)
+        self.url_box.set_margin_top(15)
         self.url_box.set_margin_bottom(10)
         self.url_box.set_margin_start(10)
         self.url_box.set_margin_end(10)
