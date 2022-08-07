@@ -2,9 +2,10 @@ import dbus
 import os
 import yt_dlp
 
+
 class VideoDownloader():
     def __init__(self):
-        self.id = str(os.getpid())     # TODO unique id
+        self.id =  0        
         self.bus = dbus.SessionBus().get_object("org.freedesktop.Notifications", "/org/freedesktop/Notifications")
         self.bus = dbus.Interface(self.bus, "org.freedesktop.Notifications")
         self.video_info = []
@@ -12,22 +13,25 @@ class VideoDownloader():
 
     def notify(self, d):
         if d['status'] == 'finished':
-            self.bus.Notify("Youtube downloader",       # app name
+            bus = dbus.SessionBus().get_object("org.freedesktop.Notifications", "/org/freedesktop/Notifications")
+            bus = dbus.Interface(bus, "org.freedesktop.Notifications")
+            bus.Notify("Youtube downloader",            # app name
                             self.id,                    # replaces id
-                            "/usr/share/icons/Adwaita/32x32/emblems/emblem-ok-symbolic.symbolic.png",         # TODO icon     # app icon
+                            "/usr/share/icons/Adwaita/32x32/emblems/emblem-ok-symbolic.symbolic.png",         # app icon
                             "Finished download",        # summary
                             self.video_info['title'],   # body
                             [],
                             {},                         # hints
-                            1000000)                    # expire timeout
+                            0)                          # expire timeout
         
 
-    def download(self, url: str, para: VideoParams):
+    def download(self, url, para):
         """downloads the video corresponding to the url and sends a notification"""
 
         options = {}
 
         # TODO use proper formats
+        # TODO download to proper path
         if para.type == "audio":
             options = {
                 'format': 'm4a/bestaudio/best',
@@ -40,7 +44,7 @@ class VideoDownloader():
             }
         else: 
             options = {
-                # 'progress_hooks': [self.notify],
+                'progress_hooks': [self.notify],
                 'format_sort': ['ext'],
                 'outtmpl': "%(title)s .%(ext)s",
             }
@@ -49,15 +53,17 @@ class VideoDownloader():
         with yt_dlp.YoutubeDL(options) as ydl:
             self.video_info = ydl.extract_info(url, download=False)
 
-        # TODO the message only gets sent, when the process is joined above...weird
-        self.id = self.bus.Notify("Youtube downloader",       # app name
-                        0,                    # replaces id
-                        "/usr/share/icons/Adwaita/32x32/places/folder-download-symbolic.symbolic.png",         # TODO icon     # app icon
-                        "Downloading video",        # summary
-                        self.video_info['title'],   # body
-                        [],
-                        {},                         # hints
-                        1000000)                          # expire timeout
+        bus = dbus.SessionBus().get_object("org.freedesktop.Notifications", "/org/freedesktop/Notifications")
+        bus = dbus.Interface(bus, "org.freedesktop.Notifications")
+        self.id = bus.Notify("Youtube downloader",       # app name
+                    0,                                   # replaces id
+                    "/usr/share/icons/Adwaita/32x32/places/folder-download-symbolic.symbolic.png",         # app icon
+                    "Downloading video",                 # summary
+                    self.video_info['title'],            # body
+                    [],
+                    {},                                  # hints
+                    0)                                   # expire timeout
+        
 
         # download the video
         with yt_dlp.YoutubeDL(options) as ydl:

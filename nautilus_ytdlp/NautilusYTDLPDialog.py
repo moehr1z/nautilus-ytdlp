@@ -2,10 +2,16 @@ import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 from gi.repository import Gtk, Adw, Gio
+from multiprocessing import Process
 
+from nautilus_ytdlp.VideoDownloader import VideoDownloader
+from nautilus_ytdlp.helpers import VideoParams
 
 class MainWindow(Gtk.ApplicationWindow):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, path,  *args, **kwargs):
+        # path where videos will get downloaded to
+        self.path = path 
+
         super().__init__(*args, **kwargs)
         self.set_default_size(400, 250)
         self.set_title("Video Downloader")
@@ -46,32 +52,33 @@ class MainWindow(Gtk.ApplicationWindow):
 
 
     def on_download_pressed(self, button):
-        pass
+        # get entered video url from entry
+        video_urls = self.url_entry.get_buffer().get_text()
+
+        # make url list
+        video_urls = video_urls.split()
+        
+        # Video download parameters
+        para = VideoParams("video", "mp4", self.path)
 
 
-#   def on_download_pressed(self, button, para):
-#         # get entered video url from entry
-#         video_urls = self.entry.get_buffer().get_text()
+        # download every video in a seperate thread
+        downloaders = [(VideoDownloader(), url) for url in video_urls]
+        pool = [Process(target=downloader.download, args=(url, para)) for (downloader, url) in downloaders]
+        for p in pool:
+            p.start() 
 
-#         # make url list
-#         video_urls = video_urls.split()
-
-#         # download every video in a seperate thread
-#         # downloaders = [(VideoDownloader(), url) for url in video_urls]
-#         # pool = [Process(target=downloader.download, args=(url, para)) for (downloader, url) in downloaders]
-#         # for p in pool:
-#         #     p.start() 
-
-#         # connection.wait(p.sentinel for p in pool)
+        # connection.wait(p.sentinel for p in pool)
 
 class NautilusYTDLPDialog(Adw.Application):
     """Class for the url prompt entry"""
 
-    def __init__(self, **kwargs):
+    def __init__(self, path, **kwargs):
         super().__init__(**kwargs)
+        self.path = path
         self.connect('activate', self.on_activate)
         
     def on_activate(self, app):
-        self.win = MainWindow(application=app)
+        self.win = MainWindow(self.path, application=app)
         self.win.present()
 
