@@ -1,0 +1,33 @@
+<interface>
+  <menu id="options-menu">
+    <section>
+      <item>
+    <attribute name="label">Print Message</attribute>
+    <attribute name="action">app.print</attribute>
+      </item>
+    </section>
+    <section>
+      <item>
+    <attribute name="label">Night Mode</attribute>
+    <attribute name="action">app.toggle</attribute>
+      </item>
+    </section>
+    <section>
+      <item>
+    <attribute name="label">Choice 1</attribute>
+    <attribute name="action">win.radiogroup</attribute>
+    <attribute name="target">radio-one</attribute>
+      </item>
+      <item>
+    <attribute name="label">Choice 2</attribute>
+    <attribute name="action">win.radiogroup</attribute>
+    <attribute name="target">radio-two</attribute>
+      </item>
+      <item>
+    <attribute name="label">Choice 3</attribute>
+    <attribute name="action">win.radiogroup</attribute>
+    <attribute name="target">radio-three</attribute>
+      </item>
+    </section>
+  </menu>
+</interface>

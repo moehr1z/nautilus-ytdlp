@@ -59,7 +59,16 @@ class MainWindow(Gtk.ApplicationWindow):
         self.set_titlebar(self.header)
         
         # create popover
-        self.popover = Gtk.PopoverMenu()  # Create a new popover menu
+        # menu = Gio.Menu.new()
+        # self.popover = Gtk.PopoverMenu()  # Create a new popover menu
+        self.popover = Gtk.Popover()  # Create a new popover menu
+        self.popover_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.popover_box.set_spacing(2)
+        self.popover_box.set_margin_top(2)
+        self.popover_box.set_margin_bottom(2)
+        self.popover_box.set_margin_start(0)
+        self.popover_box.set_margin_end(0)
+        # self.popover.set_menu_model(menu)
 
         # create menu button
         self.hamburger = Gtk.MenuButton()
@@ -69,28 +78,37 @@ class MainWindow(Gtk.ApplicationWindow):
         # Add menu button to the header bar
         self.header.pack_start(self.hamburger)
         
-        # create menu from xml
-        self.builder = Gtk.Builder() 
-        self.builder.add_from_file("/home/moritz/nautilus-ytdlp/nautilus_ytdlp/popover.ui")
-        self.popover.set_menu_model(self.builder.get_object('options-menu'))
-
         # action for "show about" dialog
-        action = Gio.SimpleAction.new("about", None)
-        action.connect("activate", self.show_about)
-        self.add_action(action)
+        about_button = Gtk.Button(label='About')
+        about_button.connect('clicked', self.show_about)
+        about_button.set_has_frame(False)
+        # action = Gio.SimpleAction.new("about", None)
+        # action.connect("activate", self.show_about)
+        # self.add_action(action)
 
-        # action for radio buttons
-        para = Gio.SimpleAction.new_stateful("radiogroup", \
-                           GLib.VariantType.new("s"), \
-                           GLib.Variant("s", "radio-mp4"))
-        para.connect("activate", self.radio_response)
-        self.add_action(para)
-
-    def radio_response(self, act_obj, act_lbl):
-        act_obj.set_state(act_lbl)
-        print(act_lbl)
         
-    def show_about(self, action, param):
+        # radio buttons for download selection
+        mp4_radio = Gtk.CheckButton(label="mp4")
+        mp4_radio.set_active(True)
+        mp4_radio.set_hexpand(True)
+        mp4_radio.set_halign(Gtk.Align.FILL)
+        mp3_radio = Gtk.CheckButton(label="mp3")
+        wav_radio = Gtk.CheckButton(label="wav")
+        mp3_radio.set_group(mp4_radio)
+        wav_radio.set_group(mp4_radio)
+
+        # Add all actions  Video Downloaderto the menu
+        # menu.append("About Video Downloader", "win.about")  
+        self.popover_box.append(mp4_radio)
+        self.popover_box.append(Gtk.Separator())
+        self.popover_box.append(mp3_radio)
+        self.popover_box.append(wav_radio)
+        self.popover_box.append(Gtk.Separator())
+        self.popover_box.append(about_button)
+        
+        self.popover.set_child(self.popover_box)
+        
+    def show_about(self, _):
         self.about = Gtk.AboutDialog()
         self.about.set_transient_for(self)  # Makes the dialog always appear in from of the parent window
         self.about.set_modal(self)  # Makes the parent window unresponsive while dialog is showing
