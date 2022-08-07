@@ -1,7 +1,7 @@
 import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
-from gi.repository import Gtk, Adw, Gio
+from gi.repository import Gtk, Adw, Gio, GLib
 from multiprocessing import Process
 
 from nautilus_ytdlp.VideoDownloader import VideoDownloader
@@ -13,6 +13,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.path = path 
 
         super().__init__(*args, **kwargs)
+        GLib.set_application_name("Youtube Downloader")
         self.set_default_size(400, 250)
         self.set_title("Video Downloader")
 
@@ -49,7 +50,51 @@ class MainWindow(Gtk.ApplicationWindow):
         self.url_box.append(self.url_entry)
         self.url_box.append(self.download_button)
         
+        self.populate_header()
+        
 
+    def populate_header(self):
+        """ creates header bar buttons """
+
+        self.header = Gtk.HeaderBar()
+        self.set_titlebar(self.header)
+        
+        # create menu
+        menu = Gio.Menu.new()
+        self.popover = Gtk.PopoverMenu()  # Create a new popover menu
+        self.popover.set_menu_model(menu)
+
+        # create menu button
+        self.hamburger = Gtk.MenuButton()
+        self.hamburger.set_popover(self.popover)
+        self.hamburger.set_icon_name("open-menu-symbolic")  
+        
+        # Add menu button to the header bar
+        self.header.pack_start(self.hamburger)
+        
+        # action for "show about" dialog
+        action = Gio.SimpleAction.new("about", None)
+        action.connect("activate", self.show_about)
+        self.add_action(action)
+
+        # Add all actions to the menu
+        menu.append("About", "win.about")  
+        
+    def show_about(self, action, param):
+        self.about = Gtk.AboutDialog()
+        self.about.set_transient_for(self)  # Makes the dialog always appear in from of the parent window
+        self.about.set_modal(self)  # Makes the parent window unresponsive while dialog is showing
+
+        self.about.set_authors(["Your Name"])
+        self.about.set_copyright("Copyright 2022 Your Full Name")
+        self.about.set_license_type(Gtk.License.GPL_3_0)
+        self.about.set_website("http://example.com")
+        self.about.set_website_label("My Website")
+        self.about.set_version("1.0")
+        self.about.set_logo_icon_name("org.example.example")  # The icon will need to be added to appropriate location
+                                                 # E.g. /usr/share/icons/hicolor/scalable/apps/org.example.example.svg
+
+        self.about.show()
 
     def on_download_pressed(self, button):
         # get entered video url from entry
@@ -68,7 +113,6 @@ class MainWindow(Gtk.ApplicationWindow):
         for p in pool:
             p.start() 
 
-        # connection.wait(p.sentinel for p in pool)
 
 class NautilusYTDLPDialog(Adw.Application):
     """Class for the url prompt entry"""

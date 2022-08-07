@@ -1,5 +1,4 @@
 import dbus
-import os
 import yt_dlp
 
 
@@ -34,6 +33,7 @@ class VideoDownloader():
         # TODO download to proper path
         if para.type == "audio":
             options = {
+                'progress_hooks': [self.notify],
                 'format': 'm4a/bestaudio/best',
                 # ℹ️ See help(yt_dlp.postprocessor) for a list of available Postprocessors and their arguments
                 'postprocessors': [{  # Extract audio using ffmpeg
