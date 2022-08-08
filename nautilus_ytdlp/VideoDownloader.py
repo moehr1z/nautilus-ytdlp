@@ -3,11 +3,10 @@ import yt_dlp
 
 
 class VideoDownloader():
-    def __init__(self):
-        self.id =  0        
-        self.bus = dbus.SessionBus().get_object("org.freedesktop.Notifications", "/org/freedesktop/Notifications")
-        self.bus = dbus.Interface(self.bus, "org.freedesktop.Notifications")
+    def __init__(self, url, para):
         self.video_info = []
+        self.url = url
+        self.para = para
 
 
     def notify(self, d):
@@ -24,14 +23,14 @@ class VideoDownloader():
                             0)                          # expire timeout
         
 
-    def download(self, url, para):
+    def download(self):
         """downloads the video corresponding to the url and sends a notification"""
 
         options = {}
 
         # TODO use proper formats
         # TODO download to proper path
-        if para.type == "audio":
+        if self.para.type == "audio":
             options = {
                 'progress_hooks': [self.notify],
                 'format': 'm4a/bestaudio/best',
@@ -51,7 +50,7 @@ class VideoDownloader():
 
         # extract title and send notification
         with yt_dlp.YoutubeDL(options) as ydl:
-            self.video_info = ydl.extract_info(url, download=False)
+            self.video_info = ydl.extract_info(self.url, download=False)
 
         bus = dbus.SessionBus().get_object("org.freedesktop.Notifications", "/org/freedesktop/Notifications")
         bus = dbus.Interface(bus, "org.freedesktop.Notifications")
@@ -67,4 +66,4 @@ class VideoDownloader():
 
         # download the video
         with yt_dlp.YoutubeDL(options) as ydl:
-            ydl.download(url)
+            ydl.download(self.url)

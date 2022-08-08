@@ -95,22 +95,17 @@ class MainWindow(Gtk.ApplicationWindow):
         # make parameters from selected radio button
         format = "" 
         type = ""
-        if act_lbl == "radio-mp4":
-            format = "mp4"
-            type = "video"
-        elif act_lbl == "radio-mp3":
+        if act_lbl == "radio-mp3":
             format = "mp3"
             type = "audio"
         elif act_lbl == "radio-wav":
             format = "wav"
             type = "audio"
         else:
-            # TODO
-            pass
+            format = "mp4"
+            type = "video"
         
         self.para = VideoParams(type, format, self.path)     
-        
-
 
         
     def show_about(self, action, param):
@@ -138,8 +133,8 @@ class MainWindow(Gtk.ApplicationWindow):
         
 
         # download every video in a seperate thread
-        downloaders = [(VideoDownloader(), url) for url in video_urls]
-        pool = [Process(target=downloader.download, args=(url, self.para)) for (downloader, url) in downloaders]
+        downloaders = [VideoDownloader(url, self.para) for url in video_urls]
+        pool = [Process(target=downloader.download, args=()) for downloader in downloaders]
         for p in pool:
             p.start() 
 
