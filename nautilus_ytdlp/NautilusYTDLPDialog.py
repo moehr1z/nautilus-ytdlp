@@ -91,6 +91,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def radio_action(self, act_obj, act_lbl, *args):
         act_obj.set_state(act_lbl)
+        act_lbl = act_lbl.get_string()
 
         # make parameters from selected radio button
         format = "" 

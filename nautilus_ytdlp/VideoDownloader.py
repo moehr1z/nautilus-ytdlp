@@ -27,6 +27,7 @@ class VideoDownloader():
         """downloads the video corresponding to the url and sends a notification"""
 
         options = {}
+        print(self.para.type)
 
         # TODO use proper formats
         # TODO download to proper path
