@@ -39,13 +39,13 @@ class VideoDownloader():
                     'key': 'FFmpegExtractAudio',
                     'preferredcodec': 'm4a',
                 }],
-                'outtmpl': "%(title)s .%(ext)s",
+                'outtmpl': "%(title)s.%(ext)s",
             }
         else: 
             options = {
                 'progress_hooks': [self.notify],
                 'format_sort': ['ext'],
-                'outtmpl': "%(title)s .%(ext)s",
+                'outtmpl': "%(title)s.%(ext)s",
             }
 
         # extract title and send notification
