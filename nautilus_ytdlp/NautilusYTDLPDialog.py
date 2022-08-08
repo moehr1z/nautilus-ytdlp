@@ -11,6 +11,7 @@ class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, path,  *args, **kwargs):
         # path where videos will get downloaded to
         self.path = path 
+        self.para = VideoParams("video", "mp4", self.path)
 
         super().__init__(*args, **kwargs)
         GLib.set_application_name("Youtube Downloader")
@@ -85,12 +86,32 @@ class MainWindow(Gtk.ApplicationWindow):
         para = Gio.SimpleAction.new_stateful("radiogroup", \
                            GLib.VariantType.new("s"), \
                            GLib.Variant("s", "radio-mp4"))
-        para.connect("activate", self.radio_response)
+        para.connect("activate", self.radio_action)
         self.add_action(para)
 
-    def radio_response(self, act_obj, act_lbl):
+    def radio_action(self, act_obj, act_lbl, *args):
         act_obj.set_state(act_lbl)
-        print(act_lbl)
+
+        # make parameters from selected radio button
+        format = "" 
+        type = ""
+        if act_lbl == "radio-mp4":
+            format = "mp4"
+            type = "video"
+        elif act_lbl == "radio-mp3":
+            format = "mp3"
+            type = "audio"
+        elif act_lbl == "radio-wav":
+            format = "wav"
+            type = "audio"
+        else:
+            # TODO
+            pass
+        
+        self.para = VideoParams(type, format, self.path)     
+        
+
+
         
     def show_about(self, action, param):
         self.about = Gtk.AboutDialog()
@@ -115,13 +136,10 @@ class MainWindow(Gtk.ApplicationWindow):
         # make url list
         video_urls = video_urls.split()
         
-        # Video download parameters
-        para = VideoParams("video", "mp4", self.path)
-
 
         # download every video in a seperate thread
         downloaders = [(VideoDownloader(), url) for url in video_urls]
-        pool = [Process(target=downloader.download, args=(url, para)) for (downloader, url) in downloaders]
+        pool = [Process(target=downloader.download, args=(url, self.para)) for (downloader, url) in downloaders]
         for p in pool:
             p.start() 
 
