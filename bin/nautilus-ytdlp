@@ -25,5 +25,5 @@ if __name__ == "__main__":
     else:
         dir = os.getcwd()
 
-    dialog = NautilusYTDLPDialog.NautilusYTDLPDialog(dir, application_id ="com.github.moehr1z.nautilus_ytdlp")
+    dialog = NautilusYTDLPDialog.NautilusYTDLPDialog(dir, application_id ="com.github.moehr1z.VideoDownloader")
     dialog.run(None)

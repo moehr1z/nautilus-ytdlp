@@ -28,6 +28,7 @@ class VideoDownloader():
 
         options = {}
         print(self.para.type)
+        print(self.para.format)
 
         # TODO use proper formats
         # TODO download to proper path
@@ -35,17 +36,16 @@ class VideoDownloader():
             options = {
                 'progress_hooks': [self.notify],
                 'format': 'm4a/bestaudio/best',
-                # ℹ️ See help(yt_dlp.postprocessor) for a list of available Postprocessors and their arguments
                 'postprocessors': [{  # Extract audio using ffmpeg
                     'key': 'FFmpegExtractAudio',
-                    'preferredcodec': 'm4a',
+                    'preferredcodec': self.para.format,
                 }],
                 'outtmpl': "%(title)s.%(ext)s",
             }
         else: 
             options = {
                 'progress_hooks': [self.notify],
-                'format_sort': ['ext'],
+                'format': "bv*[ext={0}]+ba[ext=m4a]/b[ext={0}] / bv*+ba/b".format(self.para.format),
                 'outtmpl': "%(title)s.%(ext)s",
             }
 

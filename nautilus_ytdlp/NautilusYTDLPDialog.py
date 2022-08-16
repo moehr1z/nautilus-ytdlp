@@ -1,7 +1,7 @@
 import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
-from gi.repository import Gtk, Adw, Gio, GLib
+from gi.repository import Gtk, Adw, Gio, GLib, GdkPixbuf
 from multiprocessing import Process
 
 from nautilus_ytdlp.VideoDownloader import VideoDownloader
@@ -14,7 +14,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.para = VideoParams("video", "mp4", self.path)
 
         super().__init__(*args, **kwargs)
-        GLib.set_application_name("Youtube Downloader")
+        GLib.set_application_name("Video Downloader")
         self.set_default_size(400, 110)
         self.set_title("Video Downloader")
         self.set_resizable(False)
@@ -114,14 +114,14 @@ class MainWindow(Gtk.ApplicationWindow):
         self.about.set_transient_for(self)  # Makes the dialog always appear in from of the parent window
         self.about.set_modal(self)  # Makes the parent window unresponsive while dialog is showing
 
-        self.about.set_authors(["Your Name"])
-        self.about.set_copyright("Copyright 2022 Your Full Name")
-        self.about.set_license_type(Gtk.License.GPL_3_0)
-        self.about.set_website("http://example.com")
-        self.about.set_website_label("My Website")
+        self.about.set_authors(["moehr1z"])
+        self.about.set_copyright("Copyright 2022 moehr1z")
+        self.about.set_license_type(Gtk.License.MIT_X11)
+        self.about.set_website("https://github.com/moehr1z/nautilus-ytdlp")
+        self.about.set_website_label("Project Github")
         self.about.set_version("1.0")
-        self.about.set_logo_icon_name("org.example.example")  # The icon will need to be added to appropriate location
-                                                 # E.g. /usr/share/icons/hicolor/scalable/apps/org.example.example.svg
+        #self.about.set_logo_icon_name("com.github.moehr1z.VideoDownloader")
+        self.about.set_logo_icon_name("com.github.moehr1z.VideoDownloader")
 
         self.about.show()
 
