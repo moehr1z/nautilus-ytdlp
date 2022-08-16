@@ -41,12 +41,14 @@ class VideoDownloader():
                     'preferredcodec': self.para.format,
                 }],
                 'outtmpl': "%(title)s.%(ext)s",
+                'paths': {'home': self.para.path},
             }
         else: 
             options = {
                 'progress_hooks': [self.notify],
                 'format': "bv*[ext={0}]+ba[ext=m4a]/b[ext={0}] / bv*+ba/b".format(self.para.format),
                 'outtmpl': "%(title)s.%(ext)s",
+                'paths': {'home': self.para.path},
             }
 
         # extract title and send notification
