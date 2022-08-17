@@ -26,30 +26,26 @@ class VideoDownloader():
     def download(self):
         """downloads the video corresponding to the url and sends a notification"""
 
-        options = {}
-        print(self.para.type)
-        print(self.para.format)
+        options = {
+            'progress_hooks': [self.notify],
+            'outtmpl': "%(title)s.%(ext)s",
+            'paths': {'home': self.para.path},
+        }
 
-        # TODO use proper formats
-        # TODO download to proper path
         if self.para.type == "audio":
-            options = {
-                'progress_hooks': [self.notify],
+            extra_opt = {
                 'format': 'm4a/bestaudio/best',
                 'postprocessors': [{  # Extract audio using ffmpeg
                     'key': 'FFmpegExtractAudio',
                     'preferredcodec': self.para.format,
                 }],
-                'outtmpl': "%(title)s.%(ext)s",
-                'paths': {'home': self.para.path},
             }
         else: 
-            options = {
-                'progress_hooks': [self.notify],
+            extra_opt = {
                 'format': "bv*[ext={0}]+ba[ext=m4a]/b[ext={0}] / bv*+ba/b".format(self.para.format),
-                'outtmpl': "%(title)s.%(ext)s",
-                'paths': {'home': self.para.path},
             }
+        
+        options.update(extra_opt)
 
         # extract title and send notification
         with yt_dlp.YoutubeDL(options) as ydl:
