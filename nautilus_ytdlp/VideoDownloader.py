@@ -1,33 +1,44 @@
 import dbus
 import yt_dlp
+from yt_dlp.utils import DownloadError, ExtractorError
 
-
+        
 class VideoDownloader():
     def __init__(self, url, para):
         self.video_info = []
         self.url = url
         self.para = para
+        self.id = 0
+
+    def notify(self, icon, summary, body):
+        bus = dbus.SessionBus().get_object("org.freedesktop.Notifications", "/org/freedesktop/Notifications")
+        bus = dbus.Interface(bus, "org.freedesktop.Notifications")
+        return bus.Notify("Youtube downloader",            # app name
+                        self.id,                    # replaces id
+                        icon,                       # app icon
+                        summary,                    # summary
+                        body,                       # body
+                        [],
+                        {},                         # hints
+                        0)                          # expire timeout
 
 
-    def notify(self, d):
+    # TODO original notification is not replaced
+    def progress_notify(self, d):
         if d['status'] == 'finished':
-            bus = dbus.SessionBus().get_object("org.freedesktop.Notifications", "/org/freedesktop/Notifications")
-            bus = dbus.Interface(bus, "org.freedesktop.Notifications")
-            bus.Notify("Youtube downloader",            # app name
-                            self.id,                    # replaces id
-                            "/usr/share/icons/Adwaita/32x32/emblems/emblem-ok-symbolic.symbolic.png",         # app icon
-                            "Finished download",        # summary
-                            self.video_info['title'],   # body
-                            [],
-                            {},                         # hints
-                            0)                          # expire timeout
+            self.notify(
+                "/usr/share/icons/Adwaita/32x32/emblems/emblem-ok-symbolic.symbolic.png",         # app icon
+                "Finished download",        # summary
+                self.video_info['title'],   # body
+            )
         
 
     def download(self):
         """downloads the video corresponding to the url and sends a notification"""
 
+        # TODO add different codecs
         options = {
-            'progress_hooks': [self.notify],
+            'progress_hooks': [self.progress_notify],
             'outtmpl': "%(title)s.%(ext)s",
             'paths': {'home': self.para.path},
         }
@@ -49,20 +60,23 @@ class VideoDownloader():
 
         # extract title and send notification
         with yt_dlp.YoutubeDL(options) as ydl:
-            self.video_info = ydl.extract_info(self.url, download=False)
+            try:
+                self.video_info = ydl.extract_info(self.url, download=False)
+            except BaseException as err:
+                print(err)
+                return
 
-        bus = dbus.SessionBus().get_object("org.freedesktop.Notifications", "/org/freedesktop/Notifications")
-        bus = dbus.Interface(bus, "org.freedesktop.Notifications")
-        self.id = bus.Notify("Youtube downloader",       # app name
-                    0,                                   # replaces id
-                    "/usr/share/icons/Adwaita/32x32/places/folder-download-symbolic.symbolic.png",         # app icon
-                    "Downloading video",                 # summary
-                    self.video_info['title'],            # body
-                    [],
-                    {},                                  # hints
-                    0)                                   # expire timeout
+        self.id = self.notify(
+            "/usr/share/icons/Adwaita/32x32/places/folder-download-symbolic.symbolic.png",         # app icon
+            "Downloading video",                 # summary
+            self.video_info['title'],            # body
+        )
         
 
         # download the video
         with yt_dlp.YoutubeDL(options) as ydl:
-            ydl.download(self.url)
+            try:
+                ydl.download(self.url)
+            except DownloadError as err:
+                print(err)
+                return
