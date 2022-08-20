@@ -23,7 +23,6 @@ class VideoDownloader():
                         0)                          # expire timeout
 
 
-    # TODO original notification is not replaced
     def progress_notify(self, d):
         if d['status'] == 'finished':
             self.notify(
@@ -63,7 +62,11 @@ class VideoDownloader():
             try:
                 self.video_info = ydl.extract_info(self.url, download=False)
             except BaseException as err:
-                print(err)
+                self.notify(
+                    "/usr/share/icons/Adwaita/32x32/emblems/emblem-important-symbolic.symbolic.png",         # app icon
+                    "Error downloading video",           # summary
+                    repr(err),                            # body
+                )
                 return
 
         self.id = self.notify(
@@ -71,12 +74,15 @@ class VideoDownloader():
             "Downloading video",                 # summary
             self.video_info['title'],            # body
         )
-        
 
         # download the video
         with yt_dlp.YoutubeDL(options) as ydl:
             try:
                 ydl.download(self.url)
             except DownloadError as err:
-                print(err)
+                self.notify(
+                    "/usr/share/icons/Adwaita/32x32/emblems/emblem-important-symbolic.symbolic.png",         # app icon
+                    "Error downloading video",           # summary
+                    repr(err),                            # body
+                )
                 return
