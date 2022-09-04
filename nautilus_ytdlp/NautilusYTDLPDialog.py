@@ -1,11 +1,19 @@
+import dbus
 import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
-from gi.repository import Gtk, Adw, Gio, GLib, GdkPixbuf
-from multiprocessing import Process
+from gi.repository import Gtk, Adw, Gio, GLib
+
+from threading import Thread
+
+
+import gi
+gi.require_version('Notify', '0.7')
+from gi.repository import Notify
 
 from nautilus_ytdlp.VideoDownloader import VideoDownloader
 from nautilus_ytdlp.helpers import VideoParams
+
 
 class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, path,  *args, **kwargs):
@@ -13,16 +21,17 @@ class MainWindow(Gtk.ApplicationWindow):
         self.path = path 
         self.para = VideoParams("video", "mp4", self.path)
 
+
         super().__init__(*args, **kwargs)
         GLib.set_application_name("Video Downloader")
         self.set_default_size(400, 110)
         self.set_title("Video Downloader")
         self.set_resizable(False)
 
-        self.main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        Notify.init("Video Downloader")
 
+        self.main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.url_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        
 
         # configure url_box
         self.url_box.set_spacing(10)
@@ -54,7 +63,7 @@ class MainWindow(Gtk.ApplicationWindow):
         
         self.populate_header()
         
-
+        
     def populate_header(self):
         """ creates header bar buttons """
 
@@ -120,7 +129,6 @@ class MainWindow(Gtk.ApplicationWindow):
         self.about.set_website("https://github.com/moehr1z/nautilus-ytdlp")
         self.about.set_website_label("Project Github")
         self.about.set_version("1.0")
-        #self.about.set_logo_icon_name("com.github.moehr1z.VideoDownloader")
         self.about.set_logo_icon_name("com.github.moehr1z.VideoDownloader")
 
         self.about.show()
@@ -135,7 +143,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
         # download every video in a seperate thread
         downloaders = [VideoDownloader(url, self.para) for url in video_urls]
-        pool = [Process(target=downloader.download, args=()) for downloader in downloaders]
+        pool = [Thread(target=downloader.download, args=()) for downloader in downloaders]
         for p in pool:
             p.start() 
 
