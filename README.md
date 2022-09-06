@@ -11,12 +11,3 @@ any video and playlist supported by yt-dlp as a video or audio file.
 
 # Installation and uninstallation
 
-## Debian, Ubuntu and derivatives
-TODO
-
-## Fedora and derivatives
-TODO
-
-## From source
-TODO
-
