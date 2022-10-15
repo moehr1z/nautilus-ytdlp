@@ -56,7 +56,6 @@ class VideoDownloader():
                 self.video_info = ydl.extract_info(self.url, download=False)
             except BaseException as err:
                 ntfc = notifier.create_notification(
-                    app_id="Video Downloader",
                     title="Error downloading video",
                     msg=repr(err),
                     duration="long",
@@ -66,7 +65,6 @@ class VideoDownloader():
                 return
 
         ntfc = notifier.create_notification(
-            app_id="Video Downloader",
             title="Downloading Video",
             msg=self.video_info['title'],
             duration="long",
@@ -87,21 +85,18 @@ class VideoDownloader():
         ntfc.close()
         if code == "cancelled":
             ntfc = notifier.create_notification(
-                app_id="Video Downloader",
                 title="Canceled download",
                 msg=self.video_info['title'],
                 duration="long",
             )
         elif code:
             ntfc = notifier.create_notification(
-                app_id="Video Downloader",
                 title="Error downloading video",
                 msg=repr(err),
                 duration="long",
             )
         else:
             ntfc = notifier.create_notification(
-                app_id="Video Downloader",
                 title="Finished download",
                 msg=self.video_info['title'],
                 duration="long",
