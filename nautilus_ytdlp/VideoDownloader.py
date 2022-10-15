@@ -59,7 +59,7 @@ class VideoDownloader():
                     repr(err),
                     "/usr/share/icons/Adwaita/32x32/emblems/emblem-important-symbolic.symbolic.png"
                 )
-                ntfc.set_timeout(0)
+                ntfc.set_timeout(Notify.EXPIRES_NEVER)
                 ntfc.show()
                 
                 return
@@ -75,7 +75,7 @@ class VideoDownloader():
             self.cancel_download,
             None # Arguments
         )
-        ntfc.set_timeout(0)
+        ntfc.set_timeout(Notify.EXPIRES_NEVER)
         ntfc.show()
 
         # download the video
@@ -106,6 +106,6 @@ class VideoDownloader():
             )
 
         ntfc.show()
-        ntfc.set_timeout(0)
+        ntfc.set_timeout(Notify.EXPIRES_NEVER)
 
             

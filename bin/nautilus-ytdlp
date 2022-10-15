@@ -4,20 +4,19 @@ gi.require_version('Gtk', '4.0')
 import sys
 import os
 
-# PROJECT_ROOT_DIRECTORY = os.path.abspath(
-#     os.path.dirname(os.path.dirname(os.path.realpath(sys.argv[0]))))
+PROJECT_ROOT_DIRECTORY = os.path.abspath(
+    os.path.dirname(os.path.dirname(os.path.realpath(sys.argv[0]))))
 
-# if (os.path.exists(os.path.join(PROJECT_ROOT_DIRECTORY, 'nautilus_ytdlp'))
-#     and PROJECT_ROOT_DIRECTORY not in sys.path):
-#     sys.path.insert(0, PROJECT_ROOT_DIRECTORY)
-#     os.putenv('PYTHONPATH', PROJECT_ROOT_DIRECTORY) # for subprocesses
+if (os.path.exists(os.path.join(PROJECT_ROOT_DIRECTORY, 'nautilus_ytdlp'))
+    and PROJECT_ROOT_DIRECTORY not in sys.path):
+    sys.path.insert(0, PROJECT_ROOT_DIRECTORY)
+    os.environ['NAUTILUS_YTDLP_PATH'] = PROJECT_ROOT_DIRECTORY # for subprocesses
 
 from nautilus_ytdlp import NautilusYTDLPDialog
 
 if __name__ == "__main__":
     dir = ""
     
-    # TODO don't just use the working directory if the path is invalid, tell the user 
     if len(sys.argv) == 2 and os.path.exists(sys.argv[1]):
         dir = sys.argv[1]
     else:

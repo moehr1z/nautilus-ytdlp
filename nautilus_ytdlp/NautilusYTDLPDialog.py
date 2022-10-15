@@ -2,7 +2,8 @@ import dbus
 import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
-from gi.repository import Gtk, Adw, Gio, GLib
+from gi.repository import Gtk, Adw, Gio, GLib, Gdk
+import os
 
 from threading import Thread
 
@@ -53,12 +54,16 @@ class MainWindow(Gtk.ApplicationWindow):
         self.url_entry.set_hexpand(True)
         self.url_entry.set_halign(Gtk.Align.FILL)
         self.url_entry.set_activates_default(True)
+        
+        # initialize spinner widget
+        self.spinner = Gtk.Spinner()      # we don't use a progress bar as this would be more complicated with mulitple download threads
 
         self.set_child(self.main_box)
         self.main_box.append(self.url_box) 
 
 
         self.url_box.append(self.url_entry)
+        self.url_box.append(self.spinner)
         self.url_box.append(self.download_button)
         
         self.populate_header()
@@ -83,7 +88,7 @@ class MainWindow(Gtk.ApplicationWindow):
         
         # create menu from xml
         self.builder = Gtk.Builder() 
-        self.builder.add_from_file("/home/moritz/nautilus-ytdlp/nautilus_ytdlp/popover.ui")
+        self.builder.add_from_file(os.getenv("NAUTILUS_YTDLP_PATH") + "/nautilus_ytdlp/popover.ui")
         self.popover.set_menu_model(self.builder.get_object('options-menu'))
 
         # action for "show about" dialog
@@ -129,11 +134,10 @@ class MainWindow(Gtk.ApplicationWindow):
         self.about.set_website("https://github.com/moehr1z/nautilus-ytdlp")
         self.about.set_website_label("Project Github")
         self.about.set_version("1.0")
-        self.about.set_logo_icon_name("com.github.moehr1z.VideoDownloader")
 
         self.about.show()
 
-    def on_download_pressed(self, button):
+    def on_download_pressed_action(self, button): 
         # get entered video url from entry
         video_urls = self.url_entry.get_buffer().get_text()
 
@@ -146,6 +150,15 @@ class MainWindow(Gtk.ApplicationWindow):
         pool = [Thread(target=downloader.download, args=()) for downloader in downloaders]
         for p in pool:
             p.start() 
+        self.spinner.start()
+
+        for p in pool:
+            p.join() 
+        self.spinner.stop()
+        
+
+    def on_download_pressed(self, button):
+        Thread(target=self.on_download_pressed_action, args=(button)).start()
 
 
 class NautilusYTDLPDialog(Adw.Application):
