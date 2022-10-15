@@ -9,7 +9,6 @@ from nautilus_ytdlp.helpers import VideoParams
 class NautilusYTDLPDialog():
 
     def __init__(_, path):
-        Notify.init("Video Downloader")
         formats = ["mp4", "mp3", "wav"]
         format = choicebox("Please select download format", choices=formats)
         if format:
