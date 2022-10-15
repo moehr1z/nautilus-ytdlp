@@ -21,8 +21,8 @@ class VideoDownloader():
         self.proc.terminate()
 
         
-    def ydl_dwl(self, ydl):
-        if __name__ == '__main__':
+    def ydl_dwl(self):
+        with yt_dlp.YoutubeDL(options) as ydl:
             ret_code = ydl.download(self.url)
             self.ret_q.put(ret_code)
 
@@ -77,9 +77,8 @@ class VideoDownloader():
         ntfc.show()
 
         # download the video
-        with yt_dlp.YoutubeDL(options) as ydl:
-            self.proc = Process(target=self.ydl_dwl, args=(ydl,))
-            self.proc.start()
+        self.proc = Thread(target=self.ydl_dwl, args=())
+        self.proc.start()
             
         self.proc.join()
         code = self.ret_q.get()
