@@ -43,7 +43,7 @@ class VideoDownloader():
                 self.video_info = ydl.extract_info(self.url, download=False)
             except BaseException as err:
                 ntfc = Notification(
-                    app_id="Video Downloader"
+                    app_id="Video Downloader",
                     title="Error downloading video",
                     msg=repr(err),
                     duration="long",
@@ -53,7 +53,7 @@ class VideoDownloader():
                 return
 
         ntfc = Notification(
-            app_id="Video Downloader"
+            app_id="Video Downloader",
             title="Downloading Video",
             msg=self.video_info['title'],
             duration="long",
@@ -65,14 +65,14 @@ class VideoDownloader():
             
         if code:
             ntfc = Notification(
-                app_id="Video Downloader"
+                app_id="Video Downloader",
                 title="Error downloading video",
                 msg=repr(err),
                 duration="long",
             )
         else:
             ntfc = Notification(
-                app_id="Video Downloader"
+                app_id="Video Downloader",
                 title="Finished download",
                 msg=self.video_info['title'],
                 duration="long",
