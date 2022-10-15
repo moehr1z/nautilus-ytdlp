@@ -1,5 +1,4 @@
 import yt_dlp
-from multiprocessing import Process, Queue
 import winotify
 import os
 
@@ -12,20 +11,12 @@ class VideoDownloader():
         self.video_info = []
         self.url = url
         self.para = para
-        self.ret_q = Queue()
         notifier.start()
-
-    @notifier.register_callback
-    def cancel_download(self, *_):
-        self.ret_q.put("cancelled")
-        self.proc.terminate()
-
         
-    def ydl_dwl(self):
+    def ydl_dwl(self, options):
         with yt_dlp.YoutubeDL(options) as ydl:
             ret_code = ydl.download(self.url)
-            self.ret_q.put(ret_code)
-
+            return ret_code
 
     def download(self):
         """downloads the video corresponding to the url and sends a notification"""
@@ -70,26 +61,13 @@ class VideoDownloader():
             msg=self.video_info['title'],
             duration="long",
         )
-        ntfc.add_actions(
-            label="Cancel",
-            launch=self.cancel_download,
-        )
         ntfc.show()
 
         # download the video
-        self.proc = Process(target=self.ydl_dwl, args=())
-        self.proc.start()
+        code = self.ydl_dwl(options)
             
-        self.proc.join()
-        code = self.ret_q.get()
         ntfc.close()
-        if code == "cancelled":
-            ntfc = notifier.create_notification(
-                title="Canceled download",
-                msg=self.video_info['title'],
-                duration="long",
-            )
-        elif code:
+        if code:
             ntfc = notifier.create_notification(
                 title="Error downloading video",
                 msg=repr(err),
