@@ -46,7 +46,7 @@ class VideoDownloader():
                     app_id="Video Downloader",
                     title="Error downloading video",
                     msg=repr(err),
-                    duration="long",
+                    duration="short",
                 )
                 ntfc.show()
                 
@@ -56,7 +56,7 @@ class VideoDownloader():
             app_id="Video Downloader",
             title="Downloading Video",
             msg=self.video_info['title'],
-            duration="long",
+            duration="short",
         )
         ntfc.show()
 
@@ -68,14 +68,14 @@ class VideoDownloader():
                 app_id="Video Downloader",
                 title="Error downloading video",
                 msg=repr(err),
-                duration="long",
+                duration="short",
             )
         else:
             ntfc = Notification(
                 app_id="Video Downloader",
                 title="Finished download",
                 msg=self.video_info['title'],
-                duration="long",
+                duration="short",
             )
 
         ntfc.show()
