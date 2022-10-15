@@ -1,17 +1,12 @@
 import yt_dlp
-import winotify
+from winotify import Notification
 import os
 
-file_path = os.path.realpath(__file__)
-r = winotify.Registry("Video Downloader", winotify.PY_EXE, repr(file_path))
-notifier = winotify.Notifier(r)
-        
 class VideoDownloader():
     def __init__(self, url, para):
         self.video_info = []
         self.url = url
         self.para = para
-        notifier.start()
         
     def ydl_dwl(self, options):
         with yt_dlp.YoutubeDL(options) as ydl:
@@ -47,7 +42,8 @@ class VideoDownloader():
             try:
                 self.video_info = ydl.extract_info(self.url, download=False)
             except BaseException as err:
-                ntfc = notifier.create_notification(
+                ntfc = Notification(
+                    app_id="Video Downloader"
                     title="Error downloading video",
                     msg=repr(err),
                     duration="long",
@@ -56,7 +52,8 @@ class VideoDownloader():
                 
                 return
 
-        ntfc = notifier.create_notification(
+        ntfc = Notification(
+            app_id="Video Downloader"
             title="Downloading Video",
             msg=self.video_info['title'],
             duration="long",
@@ -67,13 +64,15 @@ class VideoDownloader():
         code = self.ydl_dwl(options)
             
         if code:
-            ntfc = notifier.create_notification(
+            ntfc = Notification(
+                app_id="Video Downloader"
                 title="Error downloading video",
                 msg=repr(err),
                 duration="long",
             )
         else:
-            ntfc = notifier.create_notification(
+            ntfc = Notification(
+                app_id="Video Downloader"
                 title="Finished download",
                 msg=self.video_info['title'],
                 duration="long",
