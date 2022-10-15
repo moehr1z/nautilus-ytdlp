@@ -77,7 +77,7 @@ class VideoDownloader():
         ntfc.show()
 
         # download the video
-        self.proc = Thread(target=self.ydl_dwl, args=())
+        self.proc = Process(target=self.ydl_dwl, args=())
         self.proc.start()
             
         self.proc.join()
