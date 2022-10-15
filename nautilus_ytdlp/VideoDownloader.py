@@ -4,7 +4,7 @@ import winotify
 import os
 
 file_path = os.path.realpath(__file__)
-r = winotify.Registry("app_id", winotify.PY_EXE, repr(file_path))
+r = winotify.Registry("Video Downloader", winotify.PY_EXE, repr(file_path))
 notifier = winotify.Notifier(r)
         
 class VideoDownloader():
