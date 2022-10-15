@@ -14,16 +14,10 @@ class NautilusYTDLPDialog():
         if format:
             while 1:
                 # make parameters 
-                format = "" 
                 type = ""
-                if format == "mp3":
-                    format = "mp3"
-                    type = "audio"
-                elif format == "wav":
-                    format = "wav"
+                if format == "mp3" or format == "wav":
                     type = "audio"
                 else:
-                    format = "mp4"
                     type = "video"
                 para = VideoParams(type, format, path)     
 
