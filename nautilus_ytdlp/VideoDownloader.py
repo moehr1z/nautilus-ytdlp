@@ -66,7 +66,6 @@ class VideoDownloader():
         # download the video
         code = self.ydl_dwl(options)
             
-        ntfc.close()
         if code:
             ntfc = notifier.create_notification(
                 title="Error downloading video",
