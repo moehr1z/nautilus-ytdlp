@@ -3,10 +3,6 @@ import os
 import sys
 from threading import Thread
 
-import gi
-gi.require_version('Notify', '0.7')
-from gi.repository import Notify
-
 from nautilus_ytdlp.VideoDownloader import VideoDownloader
 from nautilus_ytdlp.helpers import VideoParams
 
