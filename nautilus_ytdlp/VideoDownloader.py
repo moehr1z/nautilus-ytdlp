@@ -1,6 +1,11 @@
 import yt_dlp
 from multiprocessing import Process, Queue
-from winotify import Notification
+import winotify
+import os
+
+file_path = os.path.realpath(__file__)
+r = winotify.Registry("app_id", winotify.PY_EXE, repr(file_path))
+notifier = winotify.Notifier(r)
         
 class VideoDownloader():
     def __init__(self, url, para):
@@ -8,7 +13,9 @@ class VideoDownloader():
         self.url = url
         self.para = para
         self.ret_q = Queue()
+        notifier.start()
 
+    @notifier.register_callback
     def cancel_download(self, *_):
         self.ret_q.put("cancelled")
         self.proc.terminate()
@@ -48,7 +55,7 @@ class VideoDownloader():
             try:
                 self.video_info = ydl.extract_info(self.url, download=False)
             except BaseException as err:
-                ntfc = Notification(
+                ntfc = notifier.create_notification(
                     app_id="Video Downloader",
                     title="Error downloading video",
                     msg=repr(err),
@@ -58,7 +65,7 @@ class VideoDownloader():
                 
                 return
 
-        ntfc = Notification(
+        ntfc = notifier.create_notification(
             app_id="Video Downloader",
             title="Downloading Video",
             msg=self.video_info['title'],
@@ -79,21 +86,21 @@ class VideoDownloader():
         code = self.ret_q.get()
         ntfc.close()
         if code == "cancelled":
-            ntfc = Notification(
+            ntfc = notifier.create_notification(
                 app_id="Video Downloader",
                 title="Canceled download",
                 msg=self.video_info['title'],
                 duration="long",
             )
         elif code:
-            ntfc = Notification(
+            ntfc = notifier.create_notification(
                 app_id="Video Downloader",
                 title="Error downloading video",
                 msg=repr(err),
                 duration="long",
             )
         else:
-            ntfc = Notification(
+            ntfc = notifier.create_notification(
                 app_id="Video Downloader",
                 title="Finished download",
                 msg=self.video_info['title'],
