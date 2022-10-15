@@ -1,8 +1,7 @@
 #!/usr/bin/env python
-import gi
-gi.require_version('Gtk', '4.0')
 import sys
 import os
+from pathlib import Path
 
 PROJECT_ROOT_DIRECTORY = os.path.abspath(
     os.path.dirname(os.path.dirname(os.path.realpath(sys.argv[0]))))
@@ -20,7 +19,6 @@ if __name__ == "__main__":
     if len(sys.argv) == 2 and os.path.exists(sys.argv[1]):
         dir = sys.argv[1]
     else:
-        dir = os.getcwd()
+        dir = str(Path.home() / "Downloads");   # TODO 
 
-    dialog = NautilusYTDLPDialog.NautilusYTDLPDialog(dir, application_id ="com.github.moehr1z.VideoDownloader")
-    dialog.run(None)
+    dialog = NautilusYTDLPDialog.NautilusYTDLPDialog(dir)

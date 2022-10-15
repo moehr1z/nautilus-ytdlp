@@ -1,12 +1,6 @@
 import yt_dlp
-from yt_dlp.utils import DownloadError
 from multiprocessing import Process, Queue
-
-from dbus.mainloop.glib import DBusGMainLoop
-
-import gi
-from gi.repository import Notify
-gi.require_version('Notify', '0.7')
+from winotify import Notification
         
 class VideoDownloader():
     def __init__(self, url, para):
@@ -54,28 +48,26 @@ class VideoDownloader():
             try:
                 self.video_info = ydl.extract_info(self.url, download=False)
             except BaseException as err:
-                ntfc = Notify.Notification.new(
-                    "Error downloading video",
-                    repr(err),
-                    "/usr/share/icons/Adwaita/32x32/emblems/emblem-important-symbolic.symbolic.png"
+                ntfc = Notification(
+                    app_id="Video Downloader",
+                    title="Error downloading video",
+                    msg=repr(err),
+                    duration="long",
                 )
-                ntfc.set_timeout(Notify.EXPIRES_NEVER)
                 ntfc.show()
                 
                 return
 
-        ntfc = Notify.Notification.new(
-            "Downloading video",
-            self.video_info['title'],            
-            "/usr/share/icons/Adwaita/32x32/places/folder-download-symbolic.symbolic.png",        
+        ntfc = Notification(
+            app_id="Video Downloader",
+            title="Downloading Video",
+            msg=self.video_info['title'],
+            duration="long",
         )
-        ntfc.add_action(
-            "action_click",
-            "Cancel",
-            self.cancel_download,
-            None # Arguments
+        ntfc.add_actions(
+            label="Cancel",
+            launch=self.cancel_download,
         )
-        ntfc.set_timeout(Notify.EXPIRES_NEVER)
         ntfc.show()
 
         # download the video
@@ -87,25 +79,27 @@ class VideoDownloader():
         code = self.ret_q.get()
         ntfc.close()
         if code == "cancelled":
-            ntfc = Notify.Notification.new(
-                "Canceled download",
-                self.video_info['title'],            
-                "/usr/share/icons/Adwaita/32x32/emblems/emblem-important-symbolic.symbolic.png",        
+            ntfc = Notification(
+                app_id="Video Downloader",
+                title="Canceled download",
+                msg=self.video_info['title'],
+                duration="long",
             )
         elif code:
-            ntfc = Notify.Notification.new(
-                "Error downloading video",
-                repr(err),
-                "/usr/share/icons/Adwaita/32x32/emblems/emblem-important-symbolic.symbolic.png"
+            ntfc = Notification(
+                app_id="Video Downloader",
+                title="Error downloading video",
+                msg=repr(err),
+                duration="long",
             )
         else:
-            ntfc = Notify.Notification.new(
-                "Finished download",
-                self.video_info['title'],   
-                "/usr/share/icons/Adwaita/32x32/emblems/emblem-ok-symbolic.symbolic.png",      
+            ntfc = Notification(
+                app_id="Video Downloader",
+                title="Finished download",
+                msg=self.video_info['title'],
+                duration="long",
             )
 
         ntfc.show()
-        ntfc.set_timeout(Notify.EXPIRES_NEVER)
 
             
